@@ -19,6 +19,8 @@ import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
+import com.scaventz.services.CompilerService
+import java.io.File
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 
@@ -40,7 +42,13 @@ class ComparatorForm(val project: Project) {
                 chooseBtn1.component.textField.document.addDocumentListener(
                     object : DocumentAdapter() {
                         override fun textChanged(e: DocumentEvent) {
-                            diffPanel.setRequest(buildRequest("compiler1", "compiler2", "123", "124"))
+                            val path = chooseBtn1.component.text
+                            log.info("path: $path")
+                            if (path.isEmpty()) return
+                            val version = CompilerService.verify(File(path))
+                            log.info("version: $version")
+                            if (version == null || version.isEmpty()) return
+                            diffPanel.setRequest(buildRequest(version.substring(0, 10), "compiler2", "123", "124"))
                         }
                     }
                 )
