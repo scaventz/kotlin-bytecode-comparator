@@ -1,6 +1,6 @@
-package org.jetbrains.plugins.template.services
+package com.scaventz.services
 
-import org.jetbrains.plugins.template.MyBundle
+import com.scaventz.MyBundle
 
 class MyApplicationService {
 

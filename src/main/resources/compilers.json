@@ -1,0 +1,14 @@
+[
+  {
+    "version": "1.6.10",
+    "url": "https://github.com/JetBrains/kotlin/releases/download/v1.6.10/kotlin-compiler-1.6.10.zip",
+    "checkType": "no",
+    "checkSum": "no"
+  },
+  {
+    "version": "1.6.20-M1",
+    "url": "https://github.com/JetBrains/kotlin/releases/download/v1.6.20-M1/kotlin-compiler-1.6.20-M1.zip",
+    "checkType": "no",
+    "checkSum": "no"
+  }
+]
