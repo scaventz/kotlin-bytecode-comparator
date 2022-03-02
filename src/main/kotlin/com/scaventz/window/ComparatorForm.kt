@@ -79,7 +79,6 @@ open class ComparatorForm(private val project: Project) {
                 }.enabled(false)
 
                 compareBtn = button("Compile And Compare") { e ->
-                    println(e)
                     // compile file
                     val editor = FileEditorManager.getInstance(project)
                         .selectedTextEditor
