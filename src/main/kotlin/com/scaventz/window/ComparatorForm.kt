@@ -24,6 +24,7 @@ import java.io.File
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
+import com.intellij.ui.dsl.builder.bindSelected
 
 @Suppress("UnstableApiUsage")
 open class ComparatorForm(private val project: Project) {
@@ -52,9 +53,9 @@ open class ComparatorForm(private val project: Project) {
                 browseCell1.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell1, kotlinc1, this@ComparatorForm)
                 )
-                checkBox("Inline")
-                checkBox("Optimization")
-                checkBox("Assertions")
+                checkBox("Inline").bindSelected(kotlinc1::ir)
+                checkBox("Optimization").bindSelected(kotlinc1::ir)
+                checkBox("Assertions").bindSelected(kotlinc1::ir)
                 checkBox("IR").bindSelected(kotlinc1::ir)
                 checkBox("Assertions")
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
@@ -68,9 +69,9 @@ open class ComparatorForm(private val project: Project) {
                 browseCell2.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell2, kotlinc2, this@ComparatorForm)
                 )
-                checkBox("Inline")
-                checkBox("Optimization")
-                checkBox("Assertions")
+                checkBox("Inline").bindSelected(kotlinc2::ir)
+                checkBox("Optimization").bindSelected(kotlinc2::ir)
+                checkBox("Assertions").bindSelected(kotlinc2::ir)
                 checkBox("IR").bindSelected(kotlinc2::ir)
                 checkBox("Assertions")
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"

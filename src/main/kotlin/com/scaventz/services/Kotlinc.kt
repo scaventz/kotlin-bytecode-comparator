@@ -7,9 +7,10 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-class Kotlinc {
-    var bin: File? = null
-    var ir = true
+class Kotlinc(
+    var bin: File? = null,
+    var ir: Boolean = true
+) {
     private val log = Logger.getInstance(this::class.java)
 
     val version by lazy {
@@ -21,11 +22,12 @@ class Kotlinc {
         val src = file.virtualFile.canonicalPath ?: return
         val command = mutableListOf("cmd", "/c", "kotlinc.bat")
         command.add(src)
-        if (!ir)
-            command.add("-Xuse-old-backend")
+        when {
+            !ir -> command.add("-Xuse-old-backend")
+        }
         command.add("-d")
         command.add(destination.path)
-
+        log.info("command: $command")
         // Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = bin!!)
         Processes.run(*command.toTypedArray(), workingDir = bin!!)
     }
