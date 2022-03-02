@@ -7,16 +7,18 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-object Kotlinc {
+class Kotlinc {
+    var bin: File? = null
     private val log = Logger.getInstance(this::class.java)
 
-    fun version(binDir: File): String? {
-        return Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = binDir)
+    val version by lazy {
+        val info = Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin!!)
+        info.substringAfter("info: ").trim()
     }
 
-    fun compile(binDir: File, file: PsiFile, destination: File) {
+    fun compile(file: PsiFile, destination: File) {
         val path = file.virtualFile.canonicalPath ?: return
-        Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = binDir)
+        Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = bin!!)
     }
 
     fun decompile(dir: File, srcPath: String): Map<String, String> {
