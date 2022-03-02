@@ -1,17 +1,22 @@
 package com.scaventz.services
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.observable.properties.GraphPropertyImpl.Companion.graphProperty
+import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.psi.PsiFile
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-class Kotlinc(
-    var bin: File? = null,
-    var ir: Boolean = true
-) {
+class Kotlinc {
     private val log = Logger.getInstance(this::class.java)
+    private val propertyGraph = PropertyGraph()
+    var bin: File? = null
+    val inline = propertyGraph.graphProperty { true }
+    val optimization = propertyGraph.graphProperty { true }
+    val assertions = propertyGraph.graphProperty { true }
+    val ir = propertyGraph.graphProperty { true }
 
     val version by lazy {
         val info = Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin!!)
@@ -23,7 +28,7 @@ class Kotlinc(
         val command = mutableListOf("cmd", "/c", "kotlinc.bat")
         command.add(src)
         when {
-            !ir -> command.add("-Xuse-old-backend")
+            !ir.get() -> command.add("-Xuse-old-backend")
         }
         command.add("-d")
         command.add(destination.path)

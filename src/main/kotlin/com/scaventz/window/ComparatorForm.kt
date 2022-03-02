@@ -53,11 +53,10 @@ open class ComparatorForm(private val project: Project) {
                 browseCell1.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell1, kotlinc1, this@ComparatorForm)
                 )
-                checkBox("Inline").bindSelected(kotlinc1::ir)
-                checkBox("Optimization").bindSelected(kotlinc1::ir)
-                checkBox("Assertions").bindSelected(kotlinc1::ir)
-                checkBox("IR").bindSelected(kotlinc1::ir)
-                checkBox("Assertions")
+                checkBox("Inline").bindSelected(kotlinc1.inline).enabled(false)
+                checkBox("Optimization").bindSelected(kotlinc1.optimization).enabled(false)
+                checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
+                checkBox("IR").bindSelected(kotlinc1.ir)
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
             }
 
@@ -69,11 +68,10 @@ open class ComparatorForm(private val project: Project) {
                 browseCell2.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell2, kotlinc2, this@ComparatorForm)
                 )
-                checkBox("Inline").bindSelected(kotlinc2::ir)
-                checkBox("Optimization").bindSelected(kotlinc2::ir)
-                checkBox("Assertions").bindSelected(kotlinc2::ir)
-                checkBox("IR").bindSelected(kotlinc2::ir)
-                checkBox("Assertions")
+                checkBox("Inline").bindSelected(kotlinc2.inline).enabled(false)
+                checkBox("Optimization").bindSelected(kotlinc2.optimization).enabled(false)
+                checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
+                checkBox("IR").bindSelected(kotlinc2.ir)
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
 
                 compareBtn = button("Compile And Compare") { e ->
