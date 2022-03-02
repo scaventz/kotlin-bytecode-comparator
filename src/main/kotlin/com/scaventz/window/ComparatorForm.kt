@@ -24,7 +24,6 @@ import java.io.File
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
-import kotlin.io.path.createTempDirectory
 
 @Suppress("UnstableApiUsage")
 open class ComparatorForm(private val project: Project) {
@@ -56,7 +55,7 @@ open class ComparatorForm(private val project: Project) {
                 checkBox("Inline")
                 checkBox("Optimization")
                 checkBox("Assertions")
-                checkBox("IR")
+                checkBox("IR").bindSelected(kotlinc1::ir)
                 checkBox("Assertions")
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
             }
@@ -72,7 +71,7 @@ open class ComparatorForm(private val project: Project) {
                 checkBox("Inline")
                 checkBox("Optimization")
                 checkBox("Assertions")
-                checkBox("IR")
+                checkBox("IR").bindSelected(kotlinc2::ir)
                 checkBox("Assertions")
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
 
@@ -87,7 +86,7 @@ open class ComparatorForm(private val project: Project) {
                     log.info("src: $src")
                     if (src == null || src.isEmpty()) return@button
 
-                    val tempDir = createTempDirectory("bytecode_comparator").toFile()
+                    val tempDir = kotlin.io.path.createTempDirectory("bytecode_comparator").toFile()
                     val outputDir1 = File(tempDir, kotlinc1.version)
                     val outputDir2 = File(tempDir, kotlinc2.version)
                     kotlinc1.compile(psi, outputDir1)

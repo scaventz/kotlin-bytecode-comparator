@@ -9,6 +9,7 @@ import java.io.InputStreamReader
 
 class Kotlinc {
     var bin: File? = null
+    var ir = true
     private val log = Logger.getInstance(this::class.java)
 
     val version by lazy {
@@ -17,8 +18,16 @@ class Kotlinc {
     }
 
     fun compile(file: PsiFile, destination: File) {
-        val path = file.virtualFile.canonicalPath ?: return
-        Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = bin!!)
+        val src = file.virtualFile.canonicalPath ?: return
+        val command = mutableListOf("cmd", "/c", "kotlinc.bat")
+        command.add(src)
+        if (!ir)
+            command.add("-Xuse-old-backend")
+        command.add("-d")
+        command.add(destination.path)
+
+        // Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = bin!!)
+        Processes.run(*command.toTypedArray(), workingDir = bin!!)
     }
 
     fun decompile(dir: File, srcPath: String): Map<String, String> {
