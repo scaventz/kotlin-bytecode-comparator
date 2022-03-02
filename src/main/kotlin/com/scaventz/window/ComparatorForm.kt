@@ -18,7 +18,6 @@ import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.intellij.ui.layout.ComponentPredicate
 import com.intellij.util.castSafelyTo
 import com.scaventz.services.Kotlinc
 import java.io.File
@@ -26,8 +25,7 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 
-
-class ComparatorForm(val project: Project) {
+open class ComparatorForm(val project: Project) {
     val panel: JPanel
 
     private val diffPanel = DiffManager.getInstance()
@@ -51,7 +49,7 @@ class ComparatorForm(val project: Project) {
                 browseCell1.component.isEditable = false
                 browseCell1.text("choose compiler 1")
                 browseCell1.component.textField.document.addDocumentListener(
-                    MyDocumentAdapter(browseCell1, kotlinc1)
+                    MyDocumentAdapter(browseCell1, kotlinc1, this@ComparatorForm)
                 )
                 checkBox("Inline")
                 checkBox("Optimization")
@@ -67,7 +65,7 @@ class ComparatorForm(val project: Project) {
                 browseCell2.component.isEditable = false
                 browseCell2.text("choose compiler 1")
                 browseCell2.component.textField.document.addDocumentListener(
-                    MyDocumentAdapter(browseCell2, kotlinc2)
+                    MyDocumentAdapter(browseCell2, kotlinc2, this@ComparatorForm)
                 )
                 checkBox("Inline")
                 checkBox("Optimization")
@@ -108,7 +106,7 @@ class ComparatorForm(val project: Project) {
                     )
                     diffPanel.setRequest(request)
                 }
-                cell(compareBtn.component)
+                cell(compareBtn.component).enabled(false)
             }
 
             row {
@@ -125,11 +123,17 @@ class ComparatorForm(val project: Project) {
         return SimpleDiffRequest("Window Title", content1, content2, title1, title2)
     }
 
-    class MyDocumentAdapter(
+    fun enableButtonIfPossible() {
+        if (kotlinc1.bin != null && kotlinc2.bin != null) {
+            compareBtn.enabled(true)
+        }
+    }
+
+    internal class MyDocumentAdapter(
         private val browseCell: Cell<TextFieldWithBrowseButton>,
-        private var kotlinc1: Kotlinc
-    ) :
-        DocumentAdapter() {
+        private var kotlinc: Kotlinc,
+        private val form: ComparatorForm
+    ) : DocumentAdapter() {
         private val log = Logger.getInstance(this::class.java)
 
         override fun textChanged(e: DocumentEvent) {
@@ -137,12 +141,12 @@ class ComparatorForm(val project: Project) {
             log.info("path: $path")
             if (path.isEmpty()) return
 
-            // path
             val bin = File(path).listFiles()?.singleOrNull {
                 it.name == "bin" && it.isDirectory
             } ?: return
 
-            kotlinc1.bin = bin
+            kotlinc.bin = bin
+            form.enableButtonIfPossible()
         }
     }
 }
