@@ -57,7 +57,9 @@ open class ComparatorForm(private val project: Project) {
                 checkBox("Optimization").bindSelected(kotlinc1.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc1.ir)
-                comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
+                comboBox(arrayOf("1.8", "11")).apply {
+                    component.toolTipText = "Target"
+                }.enabled(false)
             }
 
             row {
@@ -72,7 +74,9 @@ open class ComparatorForm(private val project: Project) {
                 checkBox("Optimization").bindSelected(kotlinc2.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc2.ir)
-                comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
+                comboBox(arrayOf("1.8", "11")).apply {
+                    component.toolTipText = "Target"
+                }.enabled(false)
 
                 compareBtn = button("Compile And Compare") { e ->
                     println(e)
