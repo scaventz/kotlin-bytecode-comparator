@@ -5,13 +5,12 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.concurrent.TimeUnit
 
 
-object CompilerService {
+object Kotlinc {
     private val log = Logger.getInstance(this::class.java)
 
-    fun verify(file: File): String? {
+    fun version(file: File): String? {
         val bin = file.listFiles()?.singleOrNull {
             it.name == "bin" && it.isDirectory
         } ?: return null

@@ -1,15 +1,10 @@
 package com.scaventz.window
 
 import com.intellij.diff.DiffContentFactory
-import com.intellij.diff.DiffContext
 import com.intellij.diff.DiffManager
 import com.intellij.diff.requests.ContentDiffRequest
 import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.tools.simple.SimpleDiffTool
-import com.intellij.diff.tools.simple.SimpleDiffViewer
-import com.intellij.diff.tools.util.base.HighlightPolicy
-import com.intellij.diff.tools.util.base.IgnorePolicy
-import com.intellij.diff.tools.util.base.TextDiffSettingsHolder
 import com.intellij.diff.util.DiffUserDataKeysEx
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -19,7 +14,7 @@ import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.scaventz.services.CompilerService
+import com.scaventz.services.Kotlinc
 import java.io.File
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
@@ -45,7 +40,7 @@ class ComparatorForm(val project: Project) {
                             val path = chooseBtn1.component.text
                             log.info("path: $path")
                             if (path.isEmpty()) return
-                            val version = CompilerService.verify(File(path))
+                            val version = Kotlinc.version(File(path))
                             log.info("version: $version")
                             if (version == null || version.isEmpty()) return
                             diffPanel.setRequest(buildRequest(version.substring(0, 10), "compiler2", "123", "124"))
