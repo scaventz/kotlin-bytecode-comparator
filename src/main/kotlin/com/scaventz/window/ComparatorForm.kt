@@ -24,6 +24,7 @@ import java.io.File
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
+import kotlin.io.path.createTempDirectory
 
 @Suppress("UnstableApiUsage")
 open class ComparatorForm(private val project: Project) {
@@ -86,10 +87,11 @@ open class ComparatorForm(private val project: Project) {
                     log.info("src: $src")
                     if (src == null || src.isEmpty()) return@button
 
-                    val outputDir1 = File("d:/temp/output/${kotlinc1.version}", psi.name)
-                    val outputDir2 = File("d:/temp/output/${kotlinc1.version}", psi.name)
+                    val tempDir = createTempDirectory("bytecode_comparator").toFile()
+                    val outputDir1 = File(tempDir, kotlinc1.version)
+                    val outputDir2 = File(tempDir, kotlinc2.version)
                     kotlinc1.compile(psi, outputDir1)
-                    kotlinc2.compile(psi, outputDir1)
+                    kotlinc2.compile(psi, outputDir2)
 
                     // decompile class file
                     val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
