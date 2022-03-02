@@ -7,13 +7,17 @@ import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.tools.simple.SimpleDiffTool
 import com.intellij.diff.util.DiffUserDataKeysEx
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.psi.PsiManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
+import com.intellij.util.castSafelyTo
 import com.scaventz.services.Kotlinc
 import java.io.File
 import javax.swing.JPanel
@@ -40,10 +44,43 @@ class ComparatorForm(val project: Project) {
                             val path = chooseBtn1.component.text
                             log.info("path: $path")
                             if (path.isEmpty()) return
-                            val version = Kotlinc.version(File(path))
+
+                            // path
+                            val bin = File(path).listFiles()?.singleOrNull {
+                                it.name == "bin" && it.isDirectory
+                            } ?: return
+
+                            val kotlinc = bin.listFiles()?.singleOrNull {
+                                it.name == "kotlinc.bat" && !it.isDirectory
+                            } ?: return
+
+                            // get version
+                            val version = Kotlinc.version(bin)
                             log.info("version: $version")
                             if (version == null || version.isEmpty()) return
-                            diffPanel.setRequest(buildRequest(version.substring(0, 10), "compiler2", "123", "124"))
+
+                            // compile file
+                            val editor = FileEditorManager.getInstance(project).selectedTextEditor
+                                .castSafelyTo<EditorEx>() ?: return
+                            val psi = PsiManager.getInstance(project).findFile(editor.virtualFile) ?: return
+                            val src = psi.text
+                            log.info("src: $src")
+                            if (src == null || src.isEmpty()) return
+                            val outputDir = File("d:/temp", psi.name)
+                            Kotlinc.compile(bin, psi, outputDir)
+
+                            // decompile class file
+                            val map = Kotlinc.decompile(outputDir, psi.virtualFile.path)
+                            val decompiled = map.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+
+                            // update panel
+                            val request = buildRequest(
+                                title1 = version.substringAfter("info: ").trim(),
+                                title2 = "compiler2",
+                                decompiled,
+                                "124"
+                            )
+                            diffPanel.setRequest(request)
                         }
                     }
                 )

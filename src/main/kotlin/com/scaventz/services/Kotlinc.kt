@@ -1,25 +1,34 @@
 package com.scaventz.services
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.psi.PsiFile
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-
 object Kotlinc {
     private val log = Logger.getInstance(this::class.java)
 
-    fun version(file: File): String? {
-        val bin = file.listFiles()?.singleOrNull {
-            it.name == "bin" && it.isDirectory
-        } ?: return null
+    fun version(binDir: File): String? {
+        return Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = binDir)
+    }
 
-        val kotlinc = bin.listFiles()?.singleOrNull {
-            it.name == "kotlinc.bat" && !it.isDirectory
-        } ?: return null
+    fun compile(binDir: File, file: PsiFile, destination: File) {
+        val path = file.virtualFile.canonicalPath ?: return
+        Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = binDir)
+    }
 
-        return Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin)
+    fun decompile(dir: File, srcPath: String): Map<String, String> {
+        val classes = dir.listFiles()?.filter {
+            it.name.endsWith(".class")
+        } ?: return mapOf()
+        val result = mutableMapOf<String, String>()
+        classes.forEach {
+            val decompiled = Processes.run("cmd", "/c", "javap", "-c", "-p", "-v", it.path, workingDir = File("/"))
+            result["all"] = decompiled
+        }
+        return result
     }
 }
 
