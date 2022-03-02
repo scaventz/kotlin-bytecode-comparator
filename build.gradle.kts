@@ -14,8 +14,6 @@ plugins {
     id("org.jetbrains.changelog") version "1.3.1"
     // Gradle Qodana Plugin
     id("org.jetbrains.qodana") version "0.1.13"
-
-    kotlin("plugin.serialization") version "1.6.10"
 }
 
 group = properties("pluginGroup")
@@ -120,8 +118,9 @@ tasks {
     }
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(8))
-    }
-}
+
+//java {
+//    toolchain {
+//        languageVersion.set(JavaLanguageVersion.of(8))
+//    }
+//}
