@@ -25,6 +25,8 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Suppress("UnstableApiUsage")
 open class ComparatorForm(private val project: Project) {
@@ -78,7 +80,7 @@ open class ComparatorForm(private val project: Project) {
                     component.toolTipText = "Target"
                 }.enabled(false)
 
-                compareBtn = button("Compile And Compare") { e ->
+                compareBtn = button("Compile And Compare") {
                     // compile file
                     val editor = FileEditorManager.getInstance(project)
                         .selectedTextEditor
@@ -94,19 +96,27 @@ open class ComparatorForm(private val project: Project) {
                     kotlinc1.compile(psi, outputDir1)
                     kotlinc2.compile(psi, outputDir2)
 
+                    var decompiled1: String? = null
+                    var decompiled2: String? = null
                     // decompile class file
-                    val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
-                    val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
+                    runBlocking {
+                        launch {
+                            val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
+                            decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        }
 
-                    val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                    val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        launch {
+                            val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
+                            decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        }
+                    }
 
                     // update panel
                     val request = buildRequest(
                         title1 = kotlinc1.version,
                         title2 = kotlinc2.version,
-                        decompiled1,
-                        decompiled2
+                        decompiled1!!,
+                        decompiled2!!
                     )
                     diffPanel.setRequest(request)
                 }
