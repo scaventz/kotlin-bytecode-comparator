@@ -33,7 +33,6 @@ class Kotlinc {
         command.add("-d")
         command.add(destination.path)
         log.info("command: $command")
-        // Processes.run("cmd", "/c", "kotlinc.bat", path, "-d", destination.path, workingDir = bin!!)
         Processes.run(*command.toTypedArray(), workingDir = bin!!)
     }
 
@@ -44,7 +43,7 @@ class Kotlinc {
         val result = mutableMapOf<String, String>()
         classes.forEach {
             val decompiled = Processes.run("cmd", "/c", "javap", "-c", "-p", "-v", it.path, workingDir = File("/"))
-            result["all"] = decompiled
+            result[it.canonicalPath] = decompiled
         }
         return result
     }

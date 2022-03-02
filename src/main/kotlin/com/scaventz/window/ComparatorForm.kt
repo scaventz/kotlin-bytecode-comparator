@@ -86,8 +86,8 @@ open class ComparatorForm(private val project: Project) {
                     if (src == null || src.isEmpty()) return@button
 
                     val tempDir = kotlin.io.path.createTempDirectory("bytecode_comparator").toFile()
-                    val outputDir1 = File(tempDir, kotlinc1.version)
-                    val outputDir2 = File(tempDir, kotlinc2.version)
+                    val outputDir1 = File(tempDir, "compiler1")
+                    val outputDir2 = File(tempDir, "compiler2")
                     kotlinc1.compile(psi, outputDir1)
                     kotlinc2.compile(psi, outputDir2)
 
