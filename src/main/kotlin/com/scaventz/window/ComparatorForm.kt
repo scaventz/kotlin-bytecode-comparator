@@ -25,7 +25,8 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 
-open class ComparatorForm(val project: Project) {
+@Suppress("UnstableApiUsage")
+open class ComparatorForm(private val project: Project) {
     val panel: JPanel
 
     private val diffPanel = DiffManager.getInstance()
@@ -74,7 +75,7 @@ open class ComparatorForm(val project: Project) {
                 checkBox("Assertions")
                 comboBox(arrayOf("1.8", "11")).component.toolTipText = "Target"
 
-                compareBtn = button("compile and compare") { e ->
+                compareBtn = button("Compile And Compare") { e ->
                     println(e)
                     // compile file
                     val editor = FileEditorManager.getInstance(project)
@@ -117,7 +118,7 @@ open class ComparatorForm(val project: Project) {
         }
     }
 
-    fun buildRequest(title1: String, title2: String, text1: String, text2: String): ContentDiffRequest {
+    private fun buildRequest(title1: String, title2: String, text1: String, text2: String): ContentDiffRequest {
         val content1 = DiffContentFactory.getInstance().create(text1)
         val content2 = DiffContentFactory.getInstance().create(text2)
         return SimpleDiffRequest("Window Title", content1, content2, title1, title2)
