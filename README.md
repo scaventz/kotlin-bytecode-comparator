@@ -10,7 +10,7 @@ For my own purpose, a plugin used to show difference of (JVM) bytecode across di
 It has the following defects
 - support Windows only
 - support single source file only
-- support `IR` options only
+- support `IR` option only
 - slow
 
 <!-- Plugin description end -->
