@@ -13,6 +13,7 @@ It has the following defects
 - support `IR` option only
 - slow
 
+![alt text](screenshot.png)
 <!-- Plugin description end -->
 
 ## Template ToDo list
