@@ -2,7 +2,7 @@
 
 # kotlin-bytecode-comparator Changelog
 
-## [v0.1.0]
+## [0.1.0] - 2022-03-03
 ### It works but have the following issues
 - support Windows only
 - support single source file only
