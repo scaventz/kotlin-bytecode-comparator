@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.github.scaventz.comparator</id>
     <name>Kotlin-Bytecode-Comparator</name>
-    <vendor>scaventz</vendor>
+    <vendor>Xin Wang</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 

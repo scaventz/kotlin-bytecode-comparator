@@ -2,6 +2,9 @@
 
 # kotlin-bytecode-comparator Changelog
 
-## [Unreleased]
-### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+## [0.1.0]
+### It works but have the following issues
+- support Windows only
+- support single source file only
+- support IR option only
+- slow
