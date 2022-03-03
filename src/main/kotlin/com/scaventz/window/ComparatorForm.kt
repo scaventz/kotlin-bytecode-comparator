@@ -27,10 +27,12 @@ import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.awt.event.ActionEvent
 import java.util.concurrent.Executors
+import kotlin.io.path.createTempDirectory
 
 @Suppress("UnstableApiUsage")
-open class ComparatorForm(private val project: Project) {
+open class ComparatorForm(project: Project) {
     val panel: JPanel
 
     private val diffPanel = DiffManager.getInstance()
@@ -45,7 +47,54 @@ open class ComparatorForm(private val project: Project) {
     private val kotlinc2 = Kotlinc()
 
     private val executor = Executors.newSingleThreadExecutor()
+    private val editorManager = FileEditorManager.getInstance(project)
+    private val psiManager = PsiManager.getInstance(project)
     private val log = Logger.getInstance(this::class.java)
+
+    private val compareBtnListener: (event: ActionEvent) -> Unit = mark@{
+        val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: return@mark
+        val psi = psiManager.findFile(editor.virtualFile) ?: return@mark
+        compareBtn.enabled(false)
+        compareBtn.component.text = "Compiling..."
+        executor.execute {
+            log.info("src: ${psi.text}")
+            if (psi.text == null || psi.text.isEmpty()) return@execute
+
+            val tempDir = createTempDirectory("bytecode_comparator").toFile()
+            val outputDir1 = File(tempDir, "compiler1")
+            val outputDir2 = File(tempDir, "compiler2")
+            var decompiled1: String? = null
+            var decompiled2: String? = null
+
+            runBlocking {
+                launch {
+                    log.info("compiling start in thread: ${Thread.currentThread().name}")
+                    kotlinc1.compile(psi, outputDir1)
+                    log.info("compiling end in thread: ${Thread.currentThread().name}")
+                    val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
+                    decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                }
+
+                launch {
+                    log.info("compiling start in thread: ${Thread.currentThread().name}")
+                    kotlinc2.compile(psi, outputDir2)
+                    log.info("compiling end in thread: ${Thread.currentThread().name}")
+                    val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
+                    decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                }
+            }
+
+            // update panel
+            val request = buildRequest(
+                title1 = kotlinc1.version,
+                title2 = kotlinc2.version,
+                decompiled1!!,
+                decompiled2!!
+            )
+            diffPanel.setRequest(request)
+            enableButtonIfPossible()
+        }
+    }
 
     init {
         panel = panel {
@@ -82,51 +131,8 @@ open class ComparatorForm(private val project: Project) {
                     component.toolTipText = "Target"
                 }.enabled(false)
 
-                compareBtn = button("Compile And Compare") {
-                    val editor = FileEditorManager.getInstance(project)
-                        .selectedTextEditor
-                        .castSafelyTo<EditorEx>() ?: return@button
-                    val psi = PsiManager.getInstance(project).findFile(editor.virtualFile) ?: return@button
-                    executor.execute {
-                        val src = psi.text
-                        log.info("src: $src")
-                        if (src == null || src.isEmpty()) return@execute
-
-                        val tempDir = kotlin.io.path.createTempDirectory("bytecode_comparator").toFile()
-                        val outputDir1 = File(tempDir, "compiler1")
-                        val outputDir2 = File(tempDir, "compiler2")
-                        var decompiled1: String? = null
-                        var decompiled2: String? = null
-
-                        runBlocking {
-                            launch {
-                                log.info("compiling start in thread: ${Thread.currentThread().name}")
-                                kotlinc1.compile(psi, outputDir1)
-                                log.info("compiling end in thread: ${Thread.currentThread().name}")
-                                val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
-                                decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            }
-
-                            launch {
-                                log.info("compiling start in thread: ${Thread.currentThread().name}")
-                                kotlinc2.compile(psi, outputDir2)
-                                log.info("compiling end in thread: ${Thread.currentThread().name}")
-                                val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
-                                decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            }
-                        }
-
-                        // update panel
-                        val request = buildRequest(
-                            title1 = kotlinc1.version,
-                            title2 = kotlinc2.version,
-                            decompiled1!!,
-                            decompiled2!!
-                        )
-                        diffPanel.setRequest(request)
-                    }
-                }
-                cell(compareBtn.component).enabled(false)
+                compareBtn = button("Compile And Compare", compareBtnListener)
+                compareBtn.enabled(false)
             }
 
             row {
