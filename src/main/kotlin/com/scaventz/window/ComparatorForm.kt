@@ -27,6 +27,7 @@ import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Executors
 
 @Suppress("UnstableApiUsage")
 open class ComparatorForm(private val project: Project) {
@@ -43,6 +44,7 @@ open class ComparatorForm(private val project: Project) {
     private val kotlinc1 = Kotlinc()
     private val kotlinc2 = Kotlinc()
 
+    private val executor = Executors.newSingleThreadExecutor()
     private val log = Logger.getInstance(this::class.java)
 
     init {
@@ -81,44 +83,51 @@ open class ComparatorForm(private val project: Project) {
                 }.enabled(false)
 
                 compareBtn = button("Compile And Compare") {
-                    // compile file
                     val editor = FileEditorManager.getInstance(project)
                         .selectedTextEditor
                         .castSafelyTo<EditorEx>() ?: return@button
                     val psi = PsiManager.getInstance(project).findFile(editor.virtualFile) ?: return@button
-                    val src = psi.text
-                    log.info("src: $src")
-                    if (src == null || src.isEmpty()) return@button
+                    executor.execute {
+                        // compile file
+                        val src = psi.text
+                        log.info("src: $src")
+                        if (src == null || src.isEmpty()) return@execute
 
-                    val tempDir = kotlin.io.path.createTempDirectory("bytecode_comparator").toFile()
-                    val outputDir1 = File(tempDir, "compiler1")
-                    val outputDir2 = File(tempDir, "compiler2")
-                    kotlinc1.compile(psi, outputDir1)
-                    kotlinc2.compile(psi, outputDir2)
+                        val tempDir = kotlin.io.path.createTempDirectory("bytecode_comparator").toFile()
+                        val outputDir1 = File(tempDir, "compiler1")
+                        val outputDir2 = File(tempDir, "compiler2")
+                        kotlinc1.compile(psi, outputDir1)
+                        kotlinc2.compile(psi, outputDir2)
 
-                    var decompiled1: String? = null
-                    var decompiled2: String? = null
-                    // decompile class file
-                    runBlocking {
-                        launch {
-                            val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
-                            decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        var decompiled1: String? = null
+                        var decompiled2: String? = null
+                        // decompile class file
+
+                        runBlocking {
+                            launch {
+                                log.info("compiling start in thread: ${Thread.currentThread().name}")
+                                val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
+                                log.info("compiling end in thread: ${Thread.currentThread().name}")
+                                decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            }
+
+                            launch {
+                                log.info("compiling in thread: ${Thread.currentThread().name}")
+                                val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
+                                log.info("compiling end in thread: ${Thread.currentThread().name}")
+                                decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            }
                         }
 
-                        launch {
-                            val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
-                            decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                        }
+                        // update panel
+                        val request = buildRequest(
+                            title1 = kotlinc1.version,
+                            title2 = kotlinc2.version,
+                            decompiled1!!,
+                            decompiled2!!
+                        )
+                        diffPanel.setRequest(request)
                     }
-
-                    // update panel
-                    val request = buildRequest(
-                        title1 = kotlinc1.version,
-                        title2 = kotlinc2.version,
-                        decompiled1!!,
-                        decompiled2!!
-                    )
-                    diffPanel.setRequest(request)
                 }
                 cell(compareBtn.component).enabled(false)
             }
