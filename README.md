@@ -4,6 +4,17 @@
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 
+<!-- Plugin description -->
+For my own purpose, a plugin used to show difference of (JVM) bytecode across different version of compilers with different options.
+
+It has the following defects
+- support Windows only
+- support single source file only
+- support `IR` options only
+- slow
+
+<!-- Plugin description end -->
+
 ## Template ToDo list
 - [x] Create a new [IntelliJ Platform Plugin Template][template] project.
 - [ ] Get familiar with the [template documentation][template].
