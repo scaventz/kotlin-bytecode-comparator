@@ -70,7 +70,7 @@ open class ComparatorForm(project: Project) {
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc1.ir)
                 comboBox(arrayOf("1.8", "11")).apply {
-                    component.toolTipText = "Target"
+                    component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
             }
 
@@ -87,7 +87,7 @@ open class ComparatorForm(project: Project) {
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc2.ir)
                 comboBox(arrayOf("1.8", "11")).apply {
-                    component.toolTipText = "Target"
+                    component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
 
                 compareBtn = button("Compile And Compare", compareBtnListener)
