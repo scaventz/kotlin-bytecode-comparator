@@ -158,6 +158,7 @@ open class ComparatorForm(project: Project) {
     fun enableButtonIfPossible() {
         if (kotlinc1.bin != null && kotlinc2.bin != null) {
             compareBtn.enabled(true)
+            compareBtn.component.text = "Compile And Compare"
         }
     }
 
