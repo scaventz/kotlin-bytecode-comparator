@@ -8,6 +8,7 @@
 For my own purpose, a plugin used to show difference of (JVM) bytecode across different version of compilers with different options.
 
 It has the following defects
+- not robust at all
 - support Windows only
 - support single source file only
 - support `IR` option only
