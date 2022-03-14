@@ -1,8 +1,8 @@
 # kotlin-bytecode-comparator
 
 ![Build](https://github.com/scaventz/kotlin-bytecode-comparator/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/18712.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/18712.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/18712.svg)](https://plugins.jetbrains.com/plugin/18712)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/18712.svg)](https://plugins.jetbrains.com/plugin/18712)
 
 ![alt text](screenshot.png)
 ## What is it  
