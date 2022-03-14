@@ -29,6 +29,7 @@ class Kotlinc {
         command.add(src)
         when {
             !ir.get() -> command.add("-Xuse-old-backend")
+            !inline.get() -> command.add("-Xno-inline")
         }
         command.add("-d")
         command.add(destination.path)

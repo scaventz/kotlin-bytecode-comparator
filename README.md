@@ -11,7 +11,7 @@ It has the following defects
 - not robust at all
 - support Windows only
 - support single source file only
-- support `IR` option only
+- support `IR`,`Inline` option only
 - slow
 
 ![alt text](screenshot.png)
