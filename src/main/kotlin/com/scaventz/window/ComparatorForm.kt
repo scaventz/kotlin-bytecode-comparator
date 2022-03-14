@@ -65,7 +65,7 @@ open class ComparatorForm(project: Project) {
                 browseCell1.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell1, kotlinc1, this@ComparatorForm)
                 )
-                checkBox("Inline").bindSelected(kotlinc1.inline).enabled(false)
+                checkBox("Inline").bindSelected(kotlinc1.inline)
                 checkBox("Optimization").bindSelected(kotlinc1.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc1.ir)
@@ -82,7 +82,7 @@ open class ComparatorForm(project: Project) {
                 browseCell2.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell2, kotlinc2, this@ComparatorForm)
                 )
-                checkBox("Inline").bindSelected(kotlinc2.inline).enabled(false)
+                checkBox("Inline").bindSelected(kotlinc2.inline)
                 checkBox("Optimization").bindSelected(kotlinc2.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
                 checkBox("IR").bindSelected(kotlinc2.ir)
