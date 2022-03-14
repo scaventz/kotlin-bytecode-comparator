@@ -4,6 +4,8 @@
 [![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 
+![alt text](screenshot.png)
+## What is it  
 <!-- Plugin description -->
 For my own purpose, a plugin used to show difference of (JVM) bytecode across different version of compilers with different options.
 
@@ -14,7 +16,9 @@ It has the following defects
 - support `IR`,`Inline` option only
 - slow
 
-![alt text](screenshot.png)
+## How to build
+`./gradlew build`  
+The resulting ZIP file is located in build/distributions
 <!-- Plugin description end -->
 
 ## Template ToDo list
