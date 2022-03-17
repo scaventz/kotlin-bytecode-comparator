@@ -10,7 +10,7 @@
 For my own purposes, a plugin for comparing bytecode differences between two versions of the compiler.
 
 It has the following defects
-- Support compiling single source file only. (The plugin calling `kotlinc yourFile.kt` under the hood). 
+- Support compiling single source file only. (It calls `kotlinc yourFile.kt` under the hood). 
 - Not robust at all
 - Support Windows only, but can be easily extended to support Linux/macOS
 - Support `IR`, `Inline` options only
