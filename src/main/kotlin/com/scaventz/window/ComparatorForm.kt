@@ -68,7 +68,8 @@ open class ComparatorForm(project: Project) {
                 checkBox("Inline").bindSelected(kotlinc1.inline)
                 checkBox("Optimization").bindSelected(kotlinc1.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
-                checkBox("IR").bindSelected(kotlinc1.ir)
+                checkBox("JVM_IR").bindSelected(kotlinc1.jvmIR)
+                checkBox("FIR").bindSelected(kotlinc1.fir)
                 comboBox(arrayOf("1.8", "11")).apply {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
@@ -85,7 +86,8 @@ open class ComparatorForm(project: Project) {
                 checkBox("Inline").bindSelected(kotlinc2.inline)
                 checkBox("Optimization").bindSelected(kotlinc2.optimization).enabled(false)
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
-                checkBox("IR").bindSelected(kotlinc2.ir)
+                checkBox("JVM_IR").bindSelected(kotlinc2.jvmIR)
+                checkBox("FIR").bindSelected(kotlinc2.fir)
                 comboBox(arrayOf("1.8", "11")).apply {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
@@ -129,7 +131,7 @@ open class ComparatorForm(project: Project) {
                         log.info("compiling start in thread: ${Thread.currentThread().name}")
                         kotlinc1.compile(psi, outputDir1)
                         log.info("compiling end in thread: ${Thread.currentThread().name}")
-                        val map1 = kotlinc1.decompile(outputDir1, psi.virtualFile.path)
+                        val map1 = kotlinc1.decompile(outputDir1)
                         decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                     }
 
@@ -137,7 +139,7 @@ open class ComparatorForm(project: Project) {
                         log.info("compiling start in thread: ${Thread.currentThread().name}")
                         kotlinc2.compile(psi, outputDir2)
                         log.info("compiling end in thread: ${Thread.currentThread().name}")
-                        val map2 = kotlinc2.decompile(outputDir2, psi.virtualFile.path)
+                        val map2 = kotlinc2.decompile(outputDir2)
                         decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                     }
                 }

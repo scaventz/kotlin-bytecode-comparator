@@ -16,7 +16,8 @@ class Kotlinc {
     val inline = propertyGraph.graphProperty { true }
     val optimization = propertyGraph.graphProperty { true }
     val assertions = propertyGraph.graphProperty { true }
-    val ir = propertyGraph.graphProperty { true }
+    val jvmIR = propertyGraph.graphProperty { true }
+    val fir = propertyGraph.graphProperty { false }
 
     val version by lazy {
         val info = Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin!!)
@@ -28,8 +29,9 @@ class Kotlinc {
         val command = mutableListOf("cmd", "/c", "kotlinc.bat")
         command.add(src)
         when {
-            !ir.get() -> command.add("-Xuse-old-backend")
+            !jvmIR.get() -> command.add("-Xuse-old-backend")
             !inline.get() -> command.add("-Xno-inline")
+            fir.get() -> command.add("-Xuse-fir")
         }
         command.add("-d")
         command.add(destination.path)
@@ -37,7 +39,7 @@ class Kotlinc {
         Processes.run(*command.toTypedArray(), workingDir = bin!!)
     }
 
-    fun decompile(dir: File, srcPath: String): Map<String, String> {
+    fun decompile(dir: File): Map<String, String> {
         val classes = dir.listFiles()?.filter {
             it.name.endsWith(".class")
         } ?: return mapOf()
