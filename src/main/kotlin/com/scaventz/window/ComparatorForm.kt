@@ -25,10 +25,14 @@ import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
+import com.scaventz.data.Decompiled
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.awt.event.ActionEvent
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.io.path.createTempDirectory
 
 @Suppress("UnstableApiUsage")
@@ -116,42 +120,60 @@ open class ComparatorForm(project: Project) {
             val psi = psiManager.findFile(editor.virtualFile) ?: return@mark
             compareBtn.enabled(false)
             compareBtn.component.text = "Compiling..."
-            executor.execute {
-                log.info("src: ${psi.text}")
-                if (psi.text == null || psi.text.isEmpty()) return@execute
-
-                val tempDir = createTempDirectory("bytecode_comparator").toFile()
-                val outputDir1 = File(tempDir, "compiler1")
-                val outputDir2 = File(tempDir, "compiler2")
-                var decompiled1: String? = null
-                var decompiled2: String? = null
-
-                runBlocking {
-                    launch {
-                        log.info("compiling start in thread: ${Thread.currentThread().name}")
-                        kotlinc1.compile(psi, outputDir1)
-                        log.info("compiling end in thread: ${Thread.currentThread().name}")
-                        val map1 = kotlinc1.decompile(outputDir1)
-                        decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+            var list: List<Decompiled>? = null
+            var request: ContentDiffRequest? = null
+            try {
+                val future = executor.submit<List<Decompiled>> {
+                    val decompiledList = mutableListOf<Decompiled>()
+                    log.info("src: ${psi.text}")
+                    if (psi.text == null || psi.text.isEmpty()) {
+                        decompiledList.add(Decompiled("Source code file is empty", kotlinc1.version))
+                        decompiledList.add(Decompiled("Source code file is empty", kotlinc2.version))
+                        return@submit decompiledList
                     }
 
-                    launch {
-                        log.info("compiling start in thread: ${Thread.currentThread().name}")
-                        kotlinc2.compile(psi, outputDir2)
-                        log.info("compiling end in thread: ${Thread.currentThread().name}")
-                        val map2 = kotlinc2.decompile(outputDir2)
-                        decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                    val tempDir = createTempDirectory("bytecode_comparator").toFile()
+                    val outputDir1 = File(tempDir, "compiler1")
+                    val outputDir2 = File(tempDir, "compiler2")
+
+                    var decompiled1: String? = null
+                    var decompiled2: String? = null
+
+                    runBlocking {
+                        launch {
+                            kotlinc1.compile(psi, outputDir1)
+                            val map1 = kotlinc1.decompile(outputDir1)
+                            decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            decompiledList.add(Decompiled(decompiled1!!, kotlinc1.version))
+                        }
+
+                        launch {
+                            kotlinc2.compile(psi, outputDir2)
+                            val map2 = kotlinc2.decompile(outputDir2)
+                            decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            decompiledList.add(Decompiled(decompiled2!!, kotlinc2.version))
+                        }
                     }
+                    return@submit decompiledList
                 }
-
+                list = future.get(60, TimeUnit.SECONDS)
                 // update panel
-                val request = buildRequest(
-                    title1 = kotlinc1.version,
-                    title2 = kotlinc2.version,
-                    decompiled1!!,
-                    decompiled2!!
+                request = buildRequest(
+                    list[0].version,
+                    list[1].version,
+                    list[0].text,
+                    list[1].text
                 )
-                diffPanel.setRequest(request)
+
+            } catch (e: TimeoutException) {
+                request = buildRequest(
+                    "unknown",
+                    "unknown",
+                    "Process timeout",
+                    "Process timeout"
+                )
+            } finally {
+                diffPanel.setRequest(request!!)
                 enableButtonIfPossible()
             }
         }

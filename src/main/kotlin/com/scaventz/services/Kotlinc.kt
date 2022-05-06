@@ -36,7 +36,6 @@ class Kotlinc {
         }
         command.add("-d")
         command.add(destination.path)
-        log.info("command: $command")
         Processes.run(*command.toTypedArray(), workingDir = bin!!)
     }
 
@@ -46,7 +45,8 @@ class Kotlinc {
         } ?: return mapOf()
         val result = mutableMapOf<String, String>()
         classes.forEach {
-            val decompiled = Processes.run("cmd", "/c", "javap", "-c", "-p", "-v", it.path, workingDir = File("/"))
+            val decompiled =
+                Processes.run("cmd", "/c", "javap", "-c", "-p", "-v", "-l", it.path, workingDir = File("/"))
             result[it.canonicalPath] = decompiled
         }
         return result
@@ -64,16 +64,12 @@ internal object Processes {
      */
     @Throws(IOException::class)
     fun run(vararg command: String, workingDir: File): String {
+        log.info("command: ${command.toList()}")
         val pb = ProcessBuilder(*command)
             .directory(workingDir)
             .redirectErrorStream(true)
         val process = pb.start()
         val result = StringBuilder(80)
-        if(!process.waitFor(60, TimeUnit.SECONDS)) {
-            process.destroy()
-        }
-        log.info("process isAlive: ${process.isAlive}")
-
         BufferedReader(InputStreamReader(process.inputStream)).use { `in` ->
             while (true) {
                 val line = `in`.readLine() ?: break
