@@ -30,7 +30,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.awt.event.ActionEvent
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.io.path.createTempDirectory
@@ -120,7 +119,7 @@ open class ComparatorForm(project: Project) {
             val psi = psiManager.findFile(editor.virtualFile) ?: return@mark
             compareBtn.enabled(false)
             compareBtn.component.text = "Compiling..."
-            var list: List<Decompiled>? = null
+            val list: List<Decompiled>
             var request: ContentDiffRequest? = null
             try {
                 val future = executor.submit<List<Decompiled>> {
@@ -136,8 +135,8 @@ open class ComparatorForm(project: Project) {
                     val outputDir1 = File(tempDir, "compiler1")
                     val outputDir2 = File(tempDir, "compiler2")
 
-                    var decompiled1: String? = null
-                    var decompiled2: String? = null
+                    var decompiled1: String?
+                    var decompiled2: String?
 
                     runBlocking {
                         launch {
