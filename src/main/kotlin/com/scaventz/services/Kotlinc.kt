@@ -1,7 +1,6 @@
 package com.scaventz.services
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.observable.properties.GraphPropertyImpl.Companion.graphProperty
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.psi.PsiFile
 import java.io.BufferedReader
@@ -13,11 +12,11 @@ class Kotlinc {
     // private val log = Logger.getInstance(this::class.java)
     private val propertyGraph = PropertyGraph()
     var bin: File? = null
-    val inline = propertyGraph.graphProperty { true }
-    val optimization = propertyGraph.graphProperty { true }
-    val assertions = propertyGraph.graphProperty { true }
-    val jvmIR = propertyGraph.graphProperty { true }
-    val fir = propertyGraph.graphProperty { false }
+    val inline = propertyGraph.lazyProperty { true }
+    val optimization = propertyGraph.lazyProperty { true }
+    val assertions = propertyGraph.lazyProperty { true }
+    val jvmIR = propertyGraph.lazyProperty { true }
+    val fir = propertyGraph.lazyProperty { false }
 
     val version by lazy {
         val info = Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin!!)

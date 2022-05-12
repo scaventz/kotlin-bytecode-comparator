@@ -73,7 +73,7 @@ open class ComparatorForm(project: Project) {
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
                 checkBox("JVM_IR").bindSelected(kotlinc1.jvmIR)
                 checkBox("FIR").bindSelected(kotlinc1.fir)
-                comboBox(arrayOf("1.8", "11")).apply {
+                comboBox(listOf("1.8", "11")).apply {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
             }
@@ -91,7 +91,7 @@ open class ComparatorForm(project: Project) {
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
                 checkBox("JVM_IR").bindSelected(kotlinc2.jvmIR)
                 checkBox("FIR").bindSelected(kotlinc2.fir)
-                comboBox(arrayOf("1.8", "11")).apply {
+                comboBox(listOf("1.8", "11")).apply {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
 
