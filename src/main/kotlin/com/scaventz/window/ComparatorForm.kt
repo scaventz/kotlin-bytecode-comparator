@@ -135,22 +135,19 @@ open class ComparatorForm(project: Project) {
                     val outputDir1 = File(tempDir, "compiler1")
                     val outputDir2 = File(tempDir, "compiler2")
 
-                    var decompiled1: String?
-                    var decompiled2: String?
-
                     runBlocking {
                         launch {
                             kotlinc1.compile(psi, outputDir1)
                             val map1 = kotlinc1.decompile(outputDir1)
-                            decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            decompiledList.add(Decompiled(decompiled1!!, kotlinc1.version))
+                            val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            decompiledList.add(Decompiled(decompiled1, kotlinc1.version))
                         }
 
                         launch {
                             kotlinc2.compile(psi, outputDir2)
                             val map2 = kotlinc2.decompile(outputDir2)
-                            decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            decompiledList.add(Decompiled(decompiled2!!, kotlinc2.version))
+                            val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                            decompiledList.add(Decompiled(decompiled2, kotlinc2.version))
                         }
                     }
                     return@submit decompiledList
