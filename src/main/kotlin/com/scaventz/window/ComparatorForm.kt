@@ -32,7 +32,7 @@ import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.psi.KtFile
 import kotlin.io.path.createTempDirectory
 
-open class ComparatorForm(project: Project) {
+open class ComparatorForm(private val project: Project) {
     val panel: JPanel
 
     private val diffPanel = DiffManager.getInstance()
@@ -46,8 +46,6 @@ open class ComparatorForm(project: Project) {
     private val kotlinc1 = Kotlinc()
     private val kotlinc2 = Kotlinc()
 
-    private val editorManager = FileEditorManager.getInstance(project)
-    private val psiManager = PsiManager.getInstance(project)
     private val log = Logger.getInstance(this::class.java)
 
     init {
@@ -108,26 +106,31 @@ open class ComparatorForm(project: Project) {
     }
 
     private fun compileAndCompare() {
-        val editor =
-            editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException("No source file opened")
+        var result1: Decompiled? = null
+        var result2: Decompiled? = null
+        var request: ContentDiffRequest? = null
+        val editorManager = FileEditorManager.getInstance(project)
+        val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException()
+        val psi = getKtFile(editor.virtualFile)
+        val relativePath = psi.packageFqName.asString().replace('.', '/')
         Thread {
-            var result1: Decompiled? = null
-            var result2: Decompiled? = null
             try {
-                val psi = getKtFile(editor.virtualFile)
                 compareBtn.enabled(false)
                 compareBtn.component.text = "Compiling..."
 
                 runBlocking {
                     log.info("src: ${psi.text}")
                     val tempDir = createTempDirectory("bytecode_comparator").toFile()
-                    val relativePath = psi.packageFqName.asString().replace('.', '/')
+
                     val outputDir1 = File(tempDir, "compiler1")
                     val outputDir2 = File(tempDir, "compiler2")
 
                     launch {
                         kotlinc1.compile(psi, outputDir1)
                         val map1 = kotlinc1.decompile(File(outputDir1, relativePath))
+                        assert(map1.isNotEmpty()) {
+                            "Doesn't find any class file under ${File(outputDir1, relativePath)}"
+                        }
                         val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                         result1 = Decompiled(decompiled1, kotlinc1.version)
                     }
@@ -135,26 +138,37 @@ open class ComparatorForm(project: Project) {
                     launch {
                         kotlinc2.compile(psi, outputDir2)
                         val map2 = kotlinc2.decompile(File(outputDir2, relativePath))
+                        assert(map2.isNotEmpty()) {
+                            "Doesn't find any class file under ${File(outputDir2, relativePath)}"
+                        }
                         val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                         result2 = Decompiled(decompiled2, kotlinc2.version)
                     }
                 }
+                request = buildRequest(
+                    result1?.version ?: "failed",
+                    result2?.version ?: "failed",
+                    result1?.text ?: "failed",
+                    result2?.text ?: "failed"
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
-            } finally {
-                val request = buildRequest(
-                    result1!!.version,
-                    result2!!.version,
-                    result1!!.text,
-                    result2!!.text
+                request = buildRequest(
+                    "failed",
+                    "failed",
+                    e.stackTraceToString(),
+                    e.stackTraceToString()
                 )
+            } finally {
                 diffPanel.setRequest(request)
                 enableButtonIfPossible()
             }
         }.start()
     }
 
+    // TODO - Investigate why sometimes updated source code doesn't reflect in PSI
     private fun getKtFile(virtualFile: VirtualFile): KtFile {
+        val psiManager = PsiManager.getInstance(project)
         val psi = psiManager.findFile(virtualFile) ?: throw RuntimeException("virtualFile $virtualFile is null")
         if (psi is KtFile) {
             return psi
