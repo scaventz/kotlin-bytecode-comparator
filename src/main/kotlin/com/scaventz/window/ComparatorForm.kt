@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
@@ -28,13 +29,9 @@ import com.intellij.ui.dsl.builder.bindSelected
 import com.scaventz.data.Decompiled
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.awt.event.ActionEvent
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import org.jetbrains.kotlin.psi.KtFile
 import kotlin.io.path.createTempDirectory
 
-@Suppress("UnstableApiUsage")
 open class ComparatorForm(project: Project) {
     val panel: JPanel
 
@@ -49,16 +46,11 @@ open class ComparatorForm(project: Project) {
     private val kotlinc1 = Kotlinc()
     private val kotlinc2 = Kotlinc()
 
-    private val executor = Executors.newSingleThreadExecutor()
     private val editorManager = FileEditorManager.getInstance(project)
     private val psiManager = PsiManager.getInstance(project)
     private val log = Logger.getInstance(this::class.java)
 
-    private val compareBtnListener: (event: ActionEvent) -> Unit
-
     init {
-        compareBtnListener = buildCompareBtnListener()
-
         panel = panel {
             row {
                 val chooserDescriptor = FileChooserDescriptorFactory.createMultipleFoldersDescriptor()
@@ -95,7 +87,9 @@ open class ComparatorForm(project: Project) {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
 
-                compareBtn = button("Compile And Compare", compareBtnListener)
+                compareBtn = button("Compile And Compare") {
+                    compileAndCompare()
+                }
                 compareBtn.enabled(false)
             }
 
@@ -113,65 +107,59 @@ open class ComparatorForm(project: Project) {
         return SimpleDiffRequest("Window Title", content1, content2, title1, title2)
     }
 
-    private fun buildCompareBtnListener(): (event: ActionEvent) -> Unit {
-        return mark@{
-            val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: return@mark
-            val psi = psiManager.findFile(editor.virtualFile) ?: return@mark
-            compareBtn.enabled(false)
-            compareBtn.component.text = "Compiling..."
-            val list: List<Decompiled>
-            var request: ContentDiffRequest? = null
+    private fun compileAndCompare() {
+        val editor =
+            editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException("No source file opened")
+        Thread {
+            var result1: Decompiled? = null
+            var result2: Decompiled? = null
             try {
-                val future = executor.submit<List<Decompiled>> {
-                    val decompiledList = mutableListOf<Decompiled>()
-                    log.info("src: ${psi.text}")
-                    if (psi.text == null || psi.text.isEmpty()) {
-                        decompiledList.add(Decompiled("Source code file is empty", kotlinc1.version))
-                        decompiledList.add(Decompiled("Source code file is empty", kotlinc2.version))
-                        return@submit decompiledList
-                    }
+                val psi = getKtFile(editor.virtualFile)
+                compareBtn.enabled(false)
+                compareBtn.component.text = "Compiling..."
 
+                runBlocking {
+                    log.info("src: ${psi.text}")
                     val tempDir = createTempDirectory("bytecode_comparator").toFile()
+                    val relativePath = psi.packageFqName.asString().replace('.', '/')
                     val outputDir1 = File(tempDir, "compiler1")
                     val outputDir2 = File(tempDir, "compiler2")
 
-                    runBlocking {
-                        launch {
-                            kotlinc1.compile(psi, outputDir1)
-                            val map1 = kotlinc1.decompile(outputDir1)
-                            val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            decompiledList.add(Decompiled(decompiled1, kotlinc1.version))
-                        }
-
-                        launch {
-                            kotlinc2.compile(psi, outputDir2)
-                            val map2 = kotlinc2.decompile(outputDir2)
-                            val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                            decompiledList.add(Decompiled(decompiled2, kotlinc2.version))
-                        }
+                    launch {
+                        kotlinc1.compile(psi, outputDir1)
+                        val map1 = kotlinc1.decompile(File(outputDir1, relativePath))
+                        val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        result1 = Decompiled(decompiled1, kotlinc1.version)
                     }
-                    return@submit decompiledList
-                }
-                list = future.get(60, TimeUnit.SECONDS)
-                // update panel
-                request = buildRequest(
-                    list[0].version,
-                    list[1].version,
-                    list[0].text,
-                    list[1].text
-                )
 
-            } catch (e: TimeoutException) {
-                request = buildRequest(
-                    "unknown",
-                    "unknown",
-                    "Process timeout",
-                    "Process timeout"
-                )
+                    launch {
+                        kotlinc2.compile(psi, outputDir2)
+                        val map2 = kotlinc2.decompile(File(outputDir2, relativePath))
+                        val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                        result2 = Decompiled(decompiled2, kotlinc2.version)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             } finally {
-                diffPanel.setRequest(request!!)
+                val request = buildRequest(
+                    result1!!.version,
+                    result2!!.version,
+                    result1!!.text,
+                    result2!!.text
+                )
+                diffPanel.setRequest(request)
                 enableButtonIfPossible()
             }
+        }.start()
+    }
+
+    private fun getKtFile(virtualFile: VirtualFile): KtFile {
+        val psi = psiManager.findFile(virtualFile) ?: throw RuntimeException("virtualFile $virtualFile is null")
+        if (psi is KtFile) {
+            return psi
+        } else {
+            throw RuntimeException("only kotlin file supported")
         }
     }
 

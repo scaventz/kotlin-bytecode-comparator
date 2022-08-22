@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [0.1.4] - 2022-08-22
+- Support Intellij Platform 2022.2
+- Support source file in a package
+
 ## [0.1.1] - 2022-05-06
 - Support `Inline`, `FIR` options
 - Support process timed out (wait for 60s at most)

@@ -5,6 +5,7 @@
     <vendor>Xin Wang</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.scaventz.services.MyApplicationService"/>
