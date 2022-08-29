@@ -54,12 +54,12 @@ open class ComparatorForm(private val project: Project) {
                 val chooserDescriptor = FileChooserDescriptorFactory.createMultipleFoldersDescriptor()
                 browseCell1 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
                 browseCell1.component.isEditable = false
-                browseCell1.text("choose compiler 1")
+                browseCell1.text("compiler dir")
                 browseCell1.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell1, kotlinc1, this@ComparatorForm)
                 )
                 checkBox("Inline").bindSelected(kotlinc1.inline)
-                checkBox("Optimization").bindSelected(kotlinc1.optimization).enabled(false)
+                checkBox("Optimization").bindSelected(kotlinc1.optimization)
                 checkBox("Assertions").bindSelected(kotlinc1.assertions).enabled(false)
                 checkBox("JVM_IR").bindSelected(kotlinc1.jvmIR)
                 checkBox("FIR").bindSelected(kotlinc1.fir)
@@ -72,12 +72,12 @@ open class ComparatorForm(private val project: Project) {
                 val chooserDescriptor = FileChooserDescriptorFactory.createMultipleFoldersDescriptor()
                 browseCell2 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
                 browseCell2.component.isEditable = false
-                browseCell2.text("choose compiler 1")
+                browseCell2.text("compiler dir")
                 browseCell2.component.textField.document.addDocumentListener(
                     MyDocumentAdapter(browseCell2, kotlinc2, this@ComparatorForm)
                 )
                 checkBox("Inline").bindSelected(kotlinc2.inline)
-                checkBox("Optimization").bindSelected(kotlinc2.optimization).enabled(false)
+                checkBox("Optimization").bindSelected(kotlinc2.optimization)
                 checkBox("Assertions").bindSelected(kotlinc2.assertions).enabled(false)
                 checkBox("JVM_IR").bindSelected(kotlinc2.jvmIR)
                 checkBox("FIR").bindSelected(kotlinc2.fir)
@@ -85,7 +85,7 @@ open class ComparatorForm(private val project: Project) {
                     component.toolTipText = "Target (Not supported yet)"
                 }.enabled(false)
 
-                compareBtn = button("Compile And Compare") {
+                compareBtn = button("Compile") {
                     compileAndCompare()
                 }
                 compareBtn.enabled(false)
@@ -180,7 +180,7 @@ open class ComparatorForm(private val project: Project) {
     fun enableButtonIfPossible() {
         if (kotlinc1.bin != null && kotlinc2.bin != null) {
             compareBtn.enabled(true)
-            compareBtn.component.text = "Compile And Compare"
+            compareBtn.component.text = "Compile"
         }
     }
 

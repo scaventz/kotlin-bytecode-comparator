@@ -31,6 +31,7 @@ class Kotlinc {
             !jvmIR.get() -> command.add("-Xuse-old-backend")
             !inline.get() -> command.add("-Xno-inline")
             fir.get() -> command.add("-Xuse-fir")
+            !optimization.get() -> command.add("-Xno-optimize")
         }
         command.add("-d")
         command.add(destination.path)
