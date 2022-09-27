@@ -34,25 +34,21 @@ import kotlin.io.path.createTempDirectory
 
 open class ComparatorForm(private val project: Project) {
     val panel: JPanel
+    private lateinit var compareBtn: Cell<JButton>
+    private val kotlinc1 = Kotlinc()
+    private val kotlinc2 = Kotlinc()
+    private val log = Logger.getInstance(this::class.java)
 
     private val diffPanel = DiffManager.getInstance()
         .createRequestPanel(null, Disposer.newDisposable(), null).apply {
             putContextHints(DiffUserDataKeysEx.FORCE_DIFF_TOOL, SimpleDiffTool.INSTANCE)
         }
 
-    private lateinit var browseCell1: Cell<TextFieldWithBrowseButton>
-    private lateinit var browseCell2: Cell<TextFieldWithBrowseButton>
-    private lateinit var compareBtn: Cell<JButton>
-    private val kotlinc1 = Kotlinc()
-    private val kotlinc2 = Kotlinc()
-
-    private val log = Logger.getInstance(this::class.java)
-
     init {
         panel = panel {
             row {
                 val chooserDescriptor = FileChooserDescriptorFactory.createMultipleFoldersDescriptor()
-                browseCell1 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
+                val browseCell1 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
                 browseCell1.component.isEditable = false
                 browseCell1.text("compiler dir")
                 browseCell1.component.textField.document.addDocumentListener(
@@ -70,7 +66,7 @@ open class ComparatorForm(private val project: Project) {
 
             row {
                 val chooserDescriptor = FileChooserDescriptorFactory.createMultipleFoldersDescriptor()
-                browseCell2 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
+                val browseCell2 = textFieldWithBrowseButton(fileChooserDescriptor = chooserDescriptor)
                 browseCell2.component.isEditable = false
                 browseCell2.text("compiler dir")
                 browseCell2.component.textField.document.addDocumentListener(
