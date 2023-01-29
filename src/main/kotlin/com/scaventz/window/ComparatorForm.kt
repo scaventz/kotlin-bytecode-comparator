@@ -7,6 +7,7 @@ import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.tools.simple.SimpleDiffTool
 import com.intellij.diff.util.DiffUserDataKeysEx
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -180,21 +181,33 @@ open class ComparatorForm(private val project: Project) {
         }
     }
 
+    fun disableCompareButton() {
+        compareBtn.enabled(false)
+    }
+
     internal class MyDocumentAdapter(
         private val browseCell: Cell<TextFieldWithBrowseButton>,
         private var kotlinc: Kotlinc,
         private val form: ComparatorForm
     ) : DocumentAdapter() {
-        private val log = Logger.getInstance(this::class.java)
+        private val LOG = logger<MyDocumentAdapter>()
 
         override fun textChanged(e: DocumentEvent) {
             val path = browseCell.component.text
-            log.info("path: $path")
-            if (path.isEmpty()) return
+            LOG.info("Chosen compiler path: $path")
+            if (path.isEmpty()) {
+                form.disableCompareButton()
+                return
+            }
 
             val bin = File(path).listFiles()?.singleOrNull {
                 it.name == "bin" && it.isDirectory
-            } ?: return
+            }
+
+            if (bin == null) {
+                form.disableCompareButton()
+                return
+            }
 
             kotlinc.bin = bin
             form.enableButtonIfPossible()
