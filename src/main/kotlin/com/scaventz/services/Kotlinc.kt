@@ -1,15 +1,16 @@
 package com.scaventz.services
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.PropertyGraph
 import com.intellij.psi.PsiFile
 import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import com.intellij.openapi.diagnostic.logger
+
+private val LOG = logger<Kotlinc>()
 
 class Kotlinc {
-    // private val log = Logger.getInstance(this::class.java)
     private val propertyGraph = PropertyGraph()
     var bin: File? = null
     val inline = propertyGraph.lazyProperty { true }
@@ -39,9 +40,12 @@ class Kotlinc {
     }
 
     fun decompile(dir: File): Map<String, String> {
+        LOG.info("files under $dir: ")
         val classes = dir.listFiles()?.filter {
             it.name.endsWith(".class")
         } ?: return mapOf()
+        LOG.info(classes.toString())
+
         val result = mutableMapOf<String, String>()
         classes.forEach {
             val decompiled =
@@ -53,7 +57,6 @@ class Kotlinc {
 }
 
 internal object Processes {
-    private val log = Logger.getInstance(this::class.java)
     private val NEWLINE = System.getProperty("line.separator")
 
     /**
@@ -63,7 +66,6 @@ internal object Processes {
      */
     @Throws(IOException::class)
     fun run(vararg command: String, workingDir: File): String {
-        log.info("command: ${command.toList()}")
         val pb = ProcessBuilder(*command)
             .directory(workingDir)
             .redirectErrorStream(true)
