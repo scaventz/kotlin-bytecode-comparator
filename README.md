@@ -5,24 +5,19 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/18712.svg)](https://plugins.jetbrains.com/plugin/18712)
 
 ![alt text](screenshot.png)
-## What is it  
+## What is this  
 <!-- Plugin description -->
-For my own purposes, a plugin for comparing bytecode differences between two versions of the compiler.
+For my own purposes, a plugin for comparing bytecode between different versions of Kotlin compiler.
 
-It has the following defects
-- Support compiling single source file only. (It calls `kotlinc` under the hood). 
-- Not robust at all
+It comes with following defects
+- Not robust as a toy tool
 - Support Windows only, but can be easily extended to support Linux/macOS
 - Support `IR`, `Inline` options only
 - Slow
 
 ## How to use it
-Open a source file in IDE, specify paths of your compilers, click "Compile And Compare".  
-I'm happy to help if you have any questions or ran into any issues.
-
-<!-- Plugin description end -->
-
-## How to build
+1. You can download the built zip from the release page;
+2. Or you can build it from the code with:
 `./gradlew build`  
-The resulting ZIP file is located in build/distributions
+The resulting ZIP file is located in build/distributions.
 
