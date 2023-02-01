@@ -15,9 +15,12 @@ It comes with following defects
 - Support `IR`, `Inline` options only
 - Slow
 
+<!-- Plugin description end -->
+
 ## How to use it
 1. You can download the built zip from the release page;
 2. Or you can build it from the code with:
 `./gradlew build`  
 The resulting ZIP file is located in build/distributions.
+
 
