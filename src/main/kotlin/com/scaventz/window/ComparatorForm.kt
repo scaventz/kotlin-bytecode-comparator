@@ -28,6 +28,7 @@ import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
 import com.scaventz.data.Decompiled
+import kotlin.concurrent.thread
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.psi.KtFile
@@ -110,7 +111,7 @@ open class ComparatorForm(private val project: Project) {
         val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException()
         val psi = getKtFile(editor.virtualFile)
         val relativePath = psi.packageFqName.asString().replace('.', '/')
-        Thread {
+        thread {
             try {
                 compareBtn.enabled(false)
                 compareBtn.component.text = "Compiling..."
@@ -160,7 +161,7 @@ open class ComparatorForm(private val project: Project) {
                 diffPanel.setRequest(request)
                 enableButtonIfPossible()
             }
-        }.start()
+        }
     }
 
     // TODO - Investigate why sometimes updated source code doesn't reflect in PSI
@@ -190,11 +191,11 @@ open class ComparatorForm(private val project: Project) {
         private var kotlinc: Kotlinc,
         private val form: ComparatorForm
     ) : DocumentAdapter() {
-        private val LOG = logger<MyDocumentAdapter>()
+        private val logger = logger<MyDocumentAdapter>()
 
         override fun textChanged(e: DocumentEvent) {
             val path = browseCell.component.text
-            LOG.info("Chosen compiler path: $path")
+            logger.info("Chosen compiler path: $path")
             if (path.isEmpty()) {
                 form.disableCompareButton()
                 return
