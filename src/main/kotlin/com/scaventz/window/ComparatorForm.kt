@@ -28,9 +28,9 @@ import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
 import com.scaventz.data.Decompiled
-import kotlin.concurrent.thread
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.psi.KtFile
 import kotlin.io.path.createTempDirectory
 
@@ -111,44 +111,43 @@ open class ComparatorForm(private val project: Project) {
         val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException()
         val psi = getKtFile(editor.virtualFile)
         val relativePath = psi.packageFqName.asString().replace('.', '/')
-        thread {
+
+        CoroutineScope(Dispatchers.Default).launch {
+            compareBtn.enabled(false)
+            compareBtn.component.text = "Compiling..."
             try {
-                compareBtn.enabled(false)
-                compareBtn.component.text = "Compiling..."
+                log.info("src: ${psi.text}")
+                val tempDir = createTempDirectory("bytecode_comparator").toFile()
 
-                runBlocking {
-                    log.info("src: ${psi.text}")
-                    val tempDir = createTempDirectory("bytecode_comparator").toFile()
-
-                    val outputDir1 = File(tempDir, "compiler1")
-                    val outputDir2 = File(tempDir, "compiler2")
-
-                    launch {
-                        kotlinc1.compile(psi, outputDir1)
-                        val map1 = kotlinc1.decompile(File(outputDir1, relativePath))
-                        assert(map1.isNotEmpty()) {
-                            "Doesn't find any class file under ${File(outputDir1, relativePath)}"
-                        }
-                        val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                        result1 = Decompiled(decompiled1, kotlinc1.version)
+                val outputDir1 = File(tempDir, "compiler1")
+                val outputDir2 = File(tempDir, "compiler2")
+                launch {
+                    kotlinc1.compile(psi, outputDir1)
+                    val map1 = kotlinc1.decompile(File(outputDir1, relativePath))
+                    assert(map1.isNotEmpty()) {
+                        "Doesn't find any class file under ${File(outputDir1, relativePath)}"
                     }
+                    val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                    result1 = Decompiled(decompiled1, kotlinc1.version)
+                }.join()
 
-                    launch {
-                        kotlinc2.compile(psi, outputDir2)
-                        val map2 = kotlinc2.decompile(File(outputDir2, relativePath))
-                        assert(map2.isNotEmpty()) {
-                            "Doesn't find any class file under ${File(outputDir2, relativePath)}"
-                        }
-                        val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
-                        result2 = Decompiled(decompiled2, kotlinc2.version)
+                launch {
+                    kotlinc2.compile(psi, outputDir2)
+                    val map2 = kotlinc2.decompile(File(outputDir2, relativePath))
+                    assert(map2.isNotEmpty()) {
+                        "Doesn't find any class file under ${File(outputDir2, relativePath)}"
                     }
-                }
+                    val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
+                    result2 = Decompiled(decompiled2, kotlinc2.version)
+                }.join()
+
                 request = buildRequest(
                     result1?.version ?: "failed",
                     result2?.version ?: "failed",
                     result1?.text ?: "failed",
                     result2?.text ?: "failed"
                 )
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 request = buildRequest(
@@ -162,6 +161,7 @@ open class ComparatorForm(private val project: Project) {
                 enableButtonIfPossible()
             }
         }
+
     }
 
     // TODO - Investigate why sometimes updated source code doesn't reflect in PSI
