@@ -121,7 +121,7 @@ open class ComparatorForm(private val project: Project) {
 
                 val outputDir1 = File(tempDir, "compiler1")
                 val outputDir2 = File(tempDir, "compiler2")
-                launch {
+                val job1 = launch {
                     kotlinc1.compile(psi, outputDir1)
                     val map1 = kotlinc1.decompile(File(outputDir1, relativePath))
                     assert(map1.isNotEmpty()) {
@@ -129,9 +129,9 @@ open class ComparatorForm(private val project: Project) {
                     }
                     val decompiled1 = map1.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                     result1 = Decompiled(decompiled1, kotlinc1.version)
-                }.join()
+                }
 
-                launch {
+                val job2 = launch {
                     kotlinc2.compile(psi, outputDir2)
                     val map2 = kotlinc2.decompile(File(outputDir2, relativePath))
                     assert(map2.isNotEmpty()) {
@@ -139,7 +139,10 @@ open class ComparatorForm(private val project: Project) {
                     }
                     val decompiled2 = map2.map { it.value }.reduce { acc, s -> acc + "\n\n" + s }
                     result2 = Decompiled(decompiled2, kotlinc2.version)
-                }.join()
+                }
+
+                job1.join()
+                job2.join()
 
                 request = buildRequest(
                     result1?.version ?: "failed",
