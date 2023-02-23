@@ -8,7 +8,7 @@ import java.io.IOException
 import java.io.InputStreamReader
 import com.intellij.openapi.diagnostic.logger
 
-private val LOG = logger<Kotlinc>()
+private val logger = logger<Kotlinc>()
 
 class Kotlinc {
     private val propertyGraph = PropertyGraph()
@@ -21,6 +21,7 @@ class Kotlinc {
 
     val version by lazy {
         val info = Processes.run("cmd", "/c", "kotlinc.bat", "-version", workingDir = bin!!)
+        logger.info("Version of Kotlin Compiler: $info")
         info.substringAfter("info: ").trim()
     }
 
@@ -40,11 +41,11 @@ class Kotlinc {
     }
 
     fun decompile(dir: File): Map<String, String> {
-        LOG.info("files under $dir: ")
+        logger.info("files under $dir: ")
         val classes = dir.listFiles()?.filter {
             it.name.endsWith(".class")
         } ?: return mapOf()
-        LOG.info(classes.toString())
+        logger.info(classes.toString())
 
         val result = mutableMapOf<String, String>()
         classes.forEach {
