@@ -20,13 +20,13 @@ import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.intellij.util.castSafelyTo
 import com.scaventz.services.Kotlinc
 import java.io.File
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.event.DocumentEvent
 import com.intellij.ui.dsl.builder.bindSelected
+import com.intellij.util.asSafely
 import com.scaventz.data.Decompiled
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -108,7 +108,7 @@ open class ComparatorForm(private val project: Project) {
         var result2: Decompiled? = null
         var request: ContentDiffRequest? = null
         val editorManager = FileEditorManager.getInstance(project)
-        val editor = editorManager.selectedTextEditor.castSafelyTo<EditorEx>() ?: throw RuntimeException()
+            val editor = editorManager.selectedTextEditor.asSafely<EditorEx>() ?: throw RuntimeException()
         val psi = getKtFile(editor.virtualFile)
         val relativePath = psi.packageFqName.asString().replace('.', '/')
 
