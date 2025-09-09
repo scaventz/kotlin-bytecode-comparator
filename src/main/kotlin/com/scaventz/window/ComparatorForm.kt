@@ -18,8 +18,6 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiManager
 import com.intellij.ui.DocumentAdapter
 import com.intellij.ui.dsl.builder.*
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.scaventz.services.Kotlinc
 import java.io.File
 import javax.swing.JButton
@@ -91,8 +89,9 @@ open class ComparatorForm(private val project: Project) {
 
             row {
                 cell(diffPanel.component)
-                    .horizontalAlign(HorizontalAlign.FILL)
-                    .verticalAlign(VerticalAlign.FILL)
+                    .align(AlignX.LEFT)
+                    // horizontalAlign(HorizontalAlign.FILL)
+                    // .verticalAlign(VerticalAlign.FILL)
             }.resizableRow()
         }
     }
